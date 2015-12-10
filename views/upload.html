@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Mile High Visualisation</title>
+	<link rel="stylesheet" type="text/css" href="static/style.css">
+	<link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css">
+	<link rel="stylesheet" href="static/jquery.fileupload.css">
+	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+	<script src="static/jquery.ui.widget.js"></script>
+	<script src="static/jquery.iframe-transport.js"></script>
+	<script src="static/jquery.fileupload.js"></script>
+	<script src="//netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"></script>
+
+</head>
+<body>
+<div class="container">
+
+	<img src="static/head.png">
+
+	<h1>MileHigh Art Uploader</h1>
+	<p>
+		<h3>Instructions</h3>
+		Please create a ZIP file containing the following images and sounds. There are 2 sounds for explosions and landing as we will select between the two on a random basis.<br><br>
+		<dl class="dl-horizontal">
+            <dt>land.png</dt><dd>1024x1024px PNG image file of your land</dd>
+			<dt>plane1.png</dt><dd>512x512px PNG image file of a small hobby plane (CESSNA style)</dd>
+            <dt>plane2.png</dt><dd>512x512px PNG image of a large passenger plane</dd>
+            <dt>plane3.png</dt><dd>512x512px PNG image of a fighter jet</dd>
+            <dt>explode1.mp3</dt><dd>The sound we hear when your plane crashes, 3 seconds max length</dd>
+            <dt>explode2.mp3</dt><dd>The sound we hear when your plane crashes, 3 seconds max length</dd>
+            <dt>landing1.mp3</dt><dd>The sound we hear when your plane landing, 3 seconds max length</dd>
+            <dt>landing2.mp3</dt><dd>The sound we hear when your plane landing, 3 seconds max length</dd>
+		</dl>
+	</p>
+
+	<p>
+		Click select files and upload your ZIP file. Once it is uploaded you should see the new images on the big screen!
+	</p>
+
+	 <!-- The fileinput-button span is used to style the file input field as button -->
+    <span class="btn btn-success fileinput-button">
+        <i class="glyphicon glyphicon-plus"></i>
+        <span>Select files...</span>
+        <!-- The file input field used as target for the file upload widget -->
+        <input id="fileupload" type="file" name="files[]" multiple>
+    </span>
+    <br>
+    <br>
+    <!-- The global progress bar -->
+    <div id="progress" class="progress">
+        <div class="progress-bar progress-bar-success"></div>
+    </div>
+    <!-- The container for the uploaded files -->
+    <div id="files" class="files"></div>
+      <br>
+</div>
+
+</body>
+<script>var token = "<%=token%>";</script>
+<script>
+/*jslint unparam: true */
+/*global window, $ */
+$(function () {
+    'use strict';
+    // Change this to the location of your server-side upload handler:
+    var url = 'file-upload';
+    $('#fileupload').fileupload({
+    	paramName: token, // Send the token as the param name
+        url: url,
+        dataType: 'json',
+        done: function (e, data) {
+            $.each(data.result.files, function (index, file) {
+                $('<p/>').text(file.name).appendTo('#files');
+            });
+        },
+        progressall: function (e, data) {
+            var progress = parseInt(data.loaded / data.total * 100, 10);
+            $('#progress .progress-bar').css(
+                'width',
+                progress + '%'
+            );
+        }
+    }).prop('disabled', !$.support.fileInput)
+        .parent().addClass($.support.fileInput ? undefined : 'disabled');
+});
+</script>
+</html>

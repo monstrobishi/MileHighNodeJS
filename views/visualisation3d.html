@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Mile High Visualisation</title>
+	<link rel="stylesheet" type="text/css" href="static/style.css">
+	<script type="text/javascript" src="static/buzz.js"></script>
+	<script type="text/javascript" src="static/three.min.js"></script>
+	<script type="text/javascript" src="static/fireworks-bundle.min.js"></script>
+
+</head>
+<body>
+	<div id="container"></div>
+</body>
+
+<script type="x-shader/x-vertex" id="vertexshader">
+	precision mediump float;
+
+	varying vec2 shoreCoords;
+	varying vec2 normalCoords;
+	varying vec3 wPos;
+	uniform float ticker;
+
+	void main()
+	{
+		gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0);
+		wPos = (modelMatrix * vec4(position, 1.0)).xyz;
+		//(position.xy - vec2(8600.0, 9600.0)) / vec2(10000.0, 10000.0) * vec2(0.5, 0.5) + vec2(0.5, 0.5);
+		shoreCoords = wPos.xz / 2000.0 + vec2(0.2);
+		normalCoords = wPos.xz / 400.0;
+	}
+</script>
+
+<script type="x-shader/x-fragment" id="fragmentshader">
+	precision mediump float;
+
+	varying vec2 shoreCoords;
+	varying vec2 normalCoords;
+
+	varying vec3 wPos;
+
+	uniform sampler2D shoreMap;
+	uniform sampler2D normalMap;
+	uniform vec3 viewPos;
+	uniform float ticker;
+
+	void main()
+	{
+		vec4 shoreTex = texture2D(shoreMap, shoreCoords);
+		vec3 lightPos = vec3(-200, 1500, -1000);
+		vec3 lightDir = normalize(lightPos - wPos);
+
+
+		float travel = length(wPos.xz + vec2(10000.0)) / 25.0;
+		vec2 normalCoordsSkewed = normalCoords + vec2(ticker, ticker) * 1.5 + vec2(sin(travel) * 0.01) * vec2(-1.0, 1.0);
+
+		vec4 normalTex = texture2D(normalMap, normalCoordsSkewed);
+		vec3 normal = normalTex.rbg * 2.0 - vec3(1.0);
+
+		vec3 reflectDir = reflect(-lightDir, normal);
+ 		vec3 viewDir = normalize(viewPos - wPos);
+
+ 		float specAngle = max(dot(reflectDir, viewDir), 0.0);
+    	float specular = clamp(pow(specAngle, 8.0), 0.0, 1.0);
+    	vec4 lightingVal = clamp(vec4(1.0, 0.75, 0.5, 1.0) * clamp(dot(normal, lightDir), 0.4, 1.0) + vec4(0.1, 0.1, 0.3, 1.0), vec4(0.0), vec4(1.0));
+
+		vec4 waterColor = mix(vec4(0.1,0.41,0.62,1.0), vec4(0.12,0.92,0.8,1.0), shoreTex.x) * 1.1;
+		gl_FragColor = waterColor * lightingVal + vec4(1.0, 0.75, 0.5, 1.0) * specular * 1.2;
+		gl_FragColor.a = 1.0;
+	}
+</script>
+
+<script type="text/javascript" src="static/jquery.js"></script>
+<script>
+	var token = "<%=token%>";
+	var canvasRenderer = !window.WebGLRenderingContext;
+</script>
+<script type="text/javascript" src="static/vis3d.js"></script>
+</html>
